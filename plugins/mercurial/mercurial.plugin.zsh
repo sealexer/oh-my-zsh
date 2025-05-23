@@ -16,11 +16,27 @@ alias hgs='hg status'
 # this is the 'git commit --amend' equivalent
 alias hgca='hg qimport -r tip ; hg qrefresh -e ; hg qfinish tip'
 
+
 function in_hg() {
-  if [[ -d .hg ]] || $(hg summary > /dev/null 2>&1); then
-    echo 1
+  # Cache the response for 1sec
+  current_time=`date +%S`
+  if [[ $IN_HG_CACHE_TIME -ne ${current_time} ]]; then
+    IN_HG_CACHE_TIME=${current_time}
+    if [[ -d .hg ]] || $(hg summary > /dev/null 2>&1); then
+      IN_HG_CACHE=1
+    else
+      unset IN_HG_CACHE
+    fi
   fi
+  echo ${IN_HG_CACHE}
+
 }
+
+#function in_hg() {
+#  if [[ -d .hg ]] || $(hg summary > /dev/null 2>&1); then
+#    echo 1
+#  fi
+#}
 
 function hg_get_branch_name() {
   if [ $(in_hg) ]; then
@@ -28,14 +44,28 @@ function hg_get_branch_name() {
   fi
 }
 
+function attempt_branch_name() {
+  echo $(hg branch 2>/dev/null)
+}
+
 function hg_prompt_info {
-  if [ $(in_hg) ]; then
-    _DISPLAY=$(hg_get_branch_name)
+  name=$(attempt_branch_name)
+  if [ -n ${name} ]; then
+    _DISPLAY=${name}
     echo "$ZSH_PROMPT_BASE_COLOR$ZSH_THEME_HG_PROMPT_PREFIX\
 $ZSH_THEME_REPO_NAME_COLOR$_DISPLAY$ZSH_PROMPT_BASE_COLOR$ZSH_THEME_HG_PROMPT_SUFFIX$ZSH_PROMPT_BASE_COLOR$(hg_dirty)$ZSH_PROMPT_BASE_COLOR"
     unset _DISPLAY
   fi
 }
+
+#function hg_prompt_info {
+#  if [ $(in_hg) ]; then
+#    _DISPLAY=$(hg_get_branch_name)
+#    echo "$ZSH_PROMPT_BASE_COLOR$ZSH_THEME_HG_PROMPT_PREFIX\
+#$ZSH_THEME_REPO_NAME_COLOR$_DISPLAY$ZSH_PROMPT_BASE_COLOR$ZSH_THEME_HG_PROMPT_SUFFIX$ZSH_PROMPT_BASE_COLOR$(hg_dirty)$ZSH_PROMPT_BASE_COLOR"
+#    unset _DISPLAY
+#  fi
+#}
 
 function hg_dirty_choose {
   if [ $(in_hg) ]; then
@@ -51,7 +81,8 @@ function hg_dirty_choose {
 }
 
 function hg_dirty {
-  hg_dirty_choose $ZSH_THEME_HG_PROMPT_DIRTY $ZSH_THEME_HG_PROMPT_CLEAN
+# [af] Speeding up rendering
+#  hg_dirty_choose $ZSH_THEME_HG_PROMPT_DIRTY $ZSH_THEME_HG_PROMPT_CLEAN
 }
 
 function hgic() {
