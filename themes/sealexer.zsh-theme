@@ -1,12 +1,12 @@
 # sealexer.zsh-theme (based on af-magic.zsh-theme)
 #
-# Author: Alexander Shusherov
+# Author: Alexander Shusher0v
 # URL: https://github.com/sealexer
 # Repo: https://github.com/sealexer/oh-my-zsh
 # Direct Link: https://github.com/sealexer/oh-my-zsh/blob/master/themes/sealexer.zsh-theme
 #
 # Created on:		June 19, 2012
-# Last modified on:	June 20, 2012
+# Last modified on:	March 03, 2017
 
 
 
@@ -15,10 +15,6 @@ local return_code="%(?..%{$fg[red]%}%? ↵%{$reset_color%})"
 
 
 # primary prompt
-#PROMPT='$FG[237]------------------------------------------------------------%{$reset_color%}
-#$FG[032]%~ \
-#$FG[105]$(prompt_welcome_char)%{$reset_color%} '
-
 PROMPT='$(prompt_nonzero_exit_code)$FG[032]%~ \
 $FG[105]$(prompt_welcome_char)%{$reset_color%} '
 
@@ -42,9 +38,11 @@ function prompt_nonzero_exit_code() {
 function prompt_welcome_char() {
   # Add red '#' if we are root
   char="%(!.$my_red#%{$reset_color%} .)"
-  if [ $(in_hg) ]; then
-    # Orange mercurial sign
-    char="$char${my_orange}\u263f%{$reset_color%}"
+  # Disabled due to performance
+  #local cb=$(git_current_branch)
+  if [ -n "$cb" ]; then
+    # Orange git sign
+    char="$char${my_orange}\u2600%{$reset_color%}"
   else
     char="$char»"
   fi
@@ -52,9 +50,10 @@ function prompt_welcome_char() {
 }
 
 function right_prompt() {
-  if [ $(in_hg) ]; then
+  local cb=$(git_current_branch)
+  if [ -n "$cb" ]; then
     # Orange name of the branch
-    echo "$my_orange$(hg_prompt_info)%{$reset_color%}%"
+    echo "$my_orange$cb%{$reset_color%}%\ %*"
   else
     # Date
     echo "%*"
